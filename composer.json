@@ -28,7 +28,9 @@
     "extra": {
         "contao": {
             "sources": {
-                "": "system/modules/newsletter_content"
+                "TL_ROOT/system/modules/newsletter_content": "system/modules/newsletter_content",
+                "TL_ROOT/assets/mootools/milkchart":"assets/mootools/milkchart",
+                "TL_ROOT/tracking":"web/tracking"
             }
         }
     }
