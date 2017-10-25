@@ -20,7 +20,8 @@
     },
     "require": {
 	    "php":">=5.3.2",
-        "contao/core-bundle":"~3.5.27 || ~4.4"
+        "contao/core-bundle":"~3.5.27 || ~4.4",
+        "menatwork/contao-multicolumnwizard": "*"
     },
     "autoload": {
         "classmap": [""]
