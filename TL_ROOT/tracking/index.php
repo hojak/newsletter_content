@@ -13,7 +13,13 @@ define('TL_SCRIPT', 'tracking/index.php');
 
 // Initialize the system
 define('TL_MODE', 'FE');
-require dirname(__DIR__) . '/system/initialize.php';
+if ( file_exists ( dirname(__DIR__) . '/system/initialize.php' ) ) {
+    // contao 3
+    require dirname(__DIR__) . '/system/initialize.php';} else {
+    require ( $_SERVER['DOCUMENT_ROOT']."/../system/initialize.php" );
+}
+
+
 
 // Run the controller
 $tracking = NewsletterContent\Classes\NewsletterTracking::getInstance();
