@@ -1,6 +1,6 @@
 {
     "name": "davidenke/newsletter_content",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "type": "contao-module",
     "description": "Simple newsletter to content element association for Contao 3 and 4",
     "keywords": ["contao","newsletter","content","tracking"],
