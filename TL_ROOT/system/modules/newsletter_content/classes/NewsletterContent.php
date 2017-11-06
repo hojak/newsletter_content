@@ -43,8 +43,8 @@ class NewsletterContent extends \Newsletter {
 	public function send(\DataContainer $objDc) {
 
         if ( version_compare(VERSION . '.' . BUILD, "4", '<')) {
-            $this->_send_version3 ( $objDc );        } else {
-            $this->_send_version4 ( $oibjDc );
+            return $this->_send_version3 ( $objDc );        } else {
+            return $this->_send_version4 ( $objDc );
         }
     }
 
@@ -237,6 +237,7 @@ class NewsletterContent extends \Newsletter {
 				$this->Session->set('tl_newsletter_send', null);
 
 				// Deactivate rejected addresses
+                $intRejected = 0;
 				if (!empty($_SESSION['REJECTED_RECIPIENTS']))
 				{
 					$intRejected = count($_SESSION['REJECTED_RECIPIENTS']);
@@ -251,6 +252,8 @@ class NewsletterContent extends \Newsletter {
 						$this->log('Recipient address "' . $strRecipient . '" was rejected and has been deactivated', __METHOD__, TL_ERROR);
 					}
 				}
+
+                if ( ! $intRejected ) $intRejected = 0;
 
 				$this->Database->prepare("UPDATE tl_newsletter SET recipients=?, rejected=? WHERE id=?")
 							   ->execute($intTotal, $intRejected, $objNewsletter->id);
@@ -495,7 +498,7 @@ class NewsletterContent extends \Newsletter {
 			if (!defined('NEWSLETTER_CONTENT_PREVIEW')) {
 			    define('NEWSLETTER_CONTENT_PREVIEW', true);
 			}
-			$html = $objNewsletter->content;
+			$html = $objNewsletter->system/cachecontent;
 		}
 
 		// Replace insert tags
@@ -534,10 +537,10 @@ class NewsletterContent extends \Newsletter {
 				}
 				$arrRecipient = array_merge($arrRecipient, array(
 					'extra' => '&preview=1',
-					'tracker_png' => \Environment::get('base') . 'tracking/?n=' . $objNewsletter->id . '&e=' . $strEmail . '&preview=1&t=png',
-					'tracker_gif' => \Environment::get('base') . 'tracking/?n=' . $objNewsletter->id . '&e=' . $strEmail . '&preview=1&t=gif',
-					'tracker_css' => \Environment::get('base') . 'tracking/?n=' . $objNewsletter->id . '&e=' . $strEmail . '&preview=1&t=css',
-					'tracker_js' => \Environment::get('base') . 'tracking/?n=' . $objNewsletter->id . '&e=' . $strEmail . '&preview=1&t=js'
+					'tracker_png' => \Environment::get('base') . 'tracking/index.php?n=' . $objNewsletter->id . '&e=' . $strEmail . '&preview=1&t=png',
+					'tracker_gif' => \Environment::get('base') . 'tracking/index.php?n=' . $objNewsletter->id . '&e=' . $strEmail . '&preview=1&t=gif',
+					'tracker_css' => \Environment::get('base') . 'tracking/index.php?n=' . $objNewsletter->id . '&e=' . $strEmail . '&preview=1&t=css',
+					'tracker_js' => \Environment::get('base') . 'tracking/index.php?n=' . $objNewsletter->id . '&e=' . $strEmail . '&preview=1&t=js'
 				));
 
 				// Send
@@ -589,10 +592,10 @@ class NewsletterContent extends \Newsletter {
 					$objEmail = $this->generateEmailObject($objNewsletter, $arrAttachments);
 					$objNewsletter->email = $objRecipients->email;
 					$arrRecipient = array_merge($objRecipients->row(), array(
-						'tracker_png' => \Environment::get('base') . 'tracking/?n=' . $objNewsletter->id . '&e=' . $objRecipients->email . '&t=png',
-						'tracker_gif' => \Environment::get('base') . 'tracking/?n=' . $objNewsletter->id . '&e=' . $objRecipients->email . '&t=gif',
-						'tracker_css' => \Environment::get('base') . 'tracking/?n=' . $objNewsletter->id . '&e=' . $objRecipients->email . '&t=css',
-						'tracker_js' => \Environment::get('base') . 'tracking/?n=' . $objNewsletter->id . '&e=' . $objRecipients->email . '&t=js'
+						'tracker_png' => \Environment::get('base') . 'tracking/index.php?n=' . $objNewsletter->id . '&e=' . $objRecipients->email . '&t=png',
+						'tracker_gif' => \Environment::get('base') . 'tracking/index.php?n=' . $objNewsletter->id . '&e=' . $objRecipients->email . '&t=gif',
+						'tracker_css' => \Environment::get('base') . 'tracking/index.php?n=' . $objNewsletter->id . '&e=' . $objRecipients->email . '&t=css',
+						'tracker_js' => \Environment::get('base') . 'tracking/index.php?n=' . $objNewsletter->id . '&e=' . $objRecipients->email . '&t=js'
 					));
 					$this->sendNewsletter($objEmail, $objNewsletter, $arrRecipient, $text, $html);
 
@@ -607,6 +610,7 @@ class NewsletterContent extends \Newsletter {
 				$this->Session->set('tl_newsletter_send', null);
 
 				// Deactivate rejected addresses
+                $intRejected = 0;
 				if (!empty($_SESSION['REJECTED_RECIPIENTS']))
 				{
 					$intRejected = count($_SESSION['REJECTED_RECIPIENTS']);
@@ -621,6 +625,7 @@ class NewsletterContent extends \Newsletter {
 						$this->log('Recipient address "' . $strRecipient . '" was rejected and has been deactivated', __METHOD__, TL_ERROR);
 					}
 				}
+                if ( ! $intRejected ) $intRejected = 0;
 
 				$this->Database->prepare("UPDATE tl_newsletter SET recipients=?, rejected=? WHERE id=?")
 							   ->execute($intTotal, $intRejected, $objNewsletter->id);
@@ -672,7 +677,7 @@ class NewsletterContent extends \Newsletter {
 		// Replace inserttags
 		$arrName = explode(' ', $this->User->name);
 		$preview = $this->replaceInsertTags($preview, false);
-		$preview = $this->prepareLinkTracking($preview, $objNewsletter->id, $this->User->email, '&preview=1');
+		$preview = $this->prepareLinkTracking_v4($preview, $objNewsletter->id, $this->User->email, '&preview=1');
 		$preview = $this->parseSimpleTokens($preview, array(
 			'firstname' => $arrName[0],
 			'lastname' => $arrName[sizeof($arrName)-1],
@@ -681,16 +686,16 @@ class NewsletterContent extends \Newsletter {
 			'city' => 'Dresden',
 			'phone' => '0351 30966184',
 			'email' => $this->User->email,
-			'tracker_png' => \Environment::get('base') . 'tracking/?n=' . $objNewsletter->id . '&e=' . $this->User->email . '&preview=1&t=png',
-			'tracker_gif' => \Environment::get('base') . 'tracking/?n=' . $objNewsletter->id . '&e=' . $this->User->email . '&preview=1&t=gif',
-			'tracker_css' => \Environment::get('base') . 'tracking/?n=' . $objNewsletter->id . '&e=' . $this->User->email . '&preview=1&t=css',
-			'tracker_js' => \Environment::get('base') . 'tracking/?n=' . $objNewsletter->id . '&e=' . $this->User->email . '&preview=1&t=js'
+			'tracker_png' => \Environment::get('base') . 'tracking/index.php?n=' . $objNewsletter->id . '&e=' . $this->User->email . '&preview=1&t=png',
+			'tracker_gif' => \Environment::get('base') . 'tracking/index.php?n=' . $objNewsletter->id . '&e=' . $this->User->email . '&preview=1&t=gif',
+			'tracker_css' => \Environment::get('base') . 'tracking/index.php?n=' . $objNewsletter->id . '&e=' . $this->User->email . '&preview=1&t=css',
+			'tracker_js' => \Environment::get('base') . 'tracking/index.php?n=' . $objNewsletter->id . '&e=' . $this->User->email . '&preview=1&t=js'
 		));
 
 		// Create cache folder
-		if (!file_exists(TL_ROOT . '/system/cache/newsletter')) {
-			mkdir(TL_ROOT . '/system/cache/newsletter');
-			file_put_contents(TL_ROOT . '/system/cache/newsletter/.htaccess',
+		if (!file_exists(TL_ROOT . '/assets/newsletter')) {
+			mkdir(TL_ROOT . '/assets/newsletter');
+			file_put_contents(TL_ROOT . '/assets/newsletter/.htaccess',
 '<IfModule !mod_authz_core.c>
   Order allow,deny
   Allow from all
@@ -701,7 +706,7 @@ class NewsletterContent extends \Newsletter {
 		}
 
 		// Cache preview
-		file_put_contents(TL_ROOT . '/system/cache/newsletter/' . $objNewsletter->alias . '.html', preg_replace('/^\s+|\n|\r|\s+$/m', '', $preview));
+		file_put_contents(TL_ROOT . '/assets/newsletter/' . $objNewsletter->alias . '.html', preg_replace('/^\s+|\n|\r|\s+$/m', '', $preview));
 
 		// Preview newsletter
 		$return = '
@@ -711,7 +716,7 @@ class NewsletterContent extends \Newsletter {
 
 <h2 class="sub_headline">'.sprintf($GLOBALS['TL_LANG']['tl_newsletter']['send'][1], $objNewsletter->id).'</h2>
 '.\Message::generate().'
-<form action="'.ampersand(\Environment::get('script'), true).'" id="tl_newsletter_send" class="tl_form" method="get">
+<form id="tl_newsletter_send" class="tl_form" method="get">
 <div class="tl_formbody_edit tl_newsletter_send">
 <input type="hidden" name="do" value="' . \Input::get('do') . '">
 <input type="hidden" name="table" value="' . \Input::get('table') . '">
@@ -736,7 +741,7 @@ class NewsletterContent extends \Newsletter {
     <td class="col_1">' . implode(', ', $arrAttachments) . '</td>
   </tr>' : '') . '
 </table>' . (!$objNewsletter->sendText ? '
-<iframe class="preview_html" id="preview_html" seamless border="0" width="703px" height="503px" style="padding:0" src="system/cache/newsletter/' . $objNewsletter->alias . '.html"></iframe>
+<iframe class="preview_html" id="preview_html" seamless border="0" width="703px" height="503px" style="padding:0" src="assets/newsletter/' . $objNewsletter->alias . '.html"></iframe>
 ' : '') . '
 <div class="preview_text">
 ' . nl2br_html5($text) . '
@@ -804,6 +809,22 @@ class NewsletterContent extends \Newsletter {
 			$strString
 		);
 	}
+
+
+	protected function prepareLinkTracking_v4($strString, $intId, $strEmail, $strExtra) {
+		return preg_replace_callback(
+			'/(\<a.*href\=")(.*)(")/Ui',
+			function($arrMatches) use ($intId, $strEmail, $strExtra) {
+				if ( $arrMatches[2]{0} == "#" OR substr( $arrMatches[2], 0, 6 ) == "mailto" ) {
+					return $arrMatches[0];
+				} else {
+					return $arrMatches[1] . \Environment::get('base') . 'tracking/index.php?n=' . $intId . '&e=' . $strEmail . '&t=link&l=' . rtrim(strtr(base64_encode($arrMatches[2]), '+/', '-_'), '=') . $strExtra . $arrMatches[3];
+				}
+			},
+			$strString
+		);
+	}
+
 
 
 	protected function parseSimpleTokens($strString, $arrData) {
@@ -895,7 +916,12 @@ class NewsletterContent extends \Newsletter {
 			$html = $objTemplate->parse();
 			$html = $this->convertRelativeUrls($html);
 			$html = $this->replaceInsertTags($html, false);
-			$html = $this->prepareLinkTracking($html, $objNewsletter->id, $arrRecipient['email'], $arrRecipient['extra'] ?: '');
+
+            if ( version_compare(VERSION . '.' . BUILD, "4", '<') )
+                $html = $this->prepareLinkTracking($html, $objNewsletter->id, $arrRecipient['email'], $arrRecipient['extra'] ?: '');
+            else
+                $html = $this->prepareLinkTracking_v4($html, $objNewsletter->id, $arrRecipient['email'], $arrRecipient['extra'] ?: '');
+
 			$html = $this->parseSimpleTokens($html, $arrRecipient);
 
 			// Append to mail object
