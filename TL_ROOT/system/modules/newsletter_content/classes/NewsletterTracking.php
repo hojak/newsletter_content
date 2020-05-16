@@ -120,7 +120,12 @@ class NewsletterTracking extends \Controller
 				break;
 
 			case 'link':
-				header('Location: ' . base64_decode(str_pad(strtr(\Input::get('l'), '-_', '+/'), strlen(\Input::get('l')) % 4, '=', STR_PAD_RIGHT)), true, 301);
+				$input = \Input::get("l");
+				$input = strtr ( $input, "-_", "+/");
+				$input = str_pad ( $input, strlen($input) % 4, "=", STR_PAD_RIGHT);
+				$url = base64_decode ( $input );
+
+				\Controller::redirect ( $url );
 				break;
 		}
 
